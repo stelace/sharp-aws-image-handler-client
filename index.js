@@ -114,7 +114,9 @@ export class Cdn {
       return `${
         this.base.replace(/\/$/, '') || ''
       }/${
-        btoa(imageRequest)
+        // By default window.btoa uses UTF-16, not UTF-8
+        // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Unicode_strings
+        btoa(unescape(encodeURIComponent(imageRequest)))
       }`
     } catch (e) {
       return uri
