@@ -146,3 +146,24 @@ export async function testWebP () {
     }
   })
 }
+
+/**
+ * Make uri/filename safe for S3
+ * https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+ * @type {Function}
+ * @param {String} uri
+ * @returns {String}
+ * @alias getSafeS3URI
+ *
+ * @example
+ * ```js
+ * import { getSafeS3Uri } from 'sharp-aws-image-handler-client'
+ * const unsafeUri = 'special~©harŝ éeè.png'
+ * const safe = getSafeS3Uri(unsafeUri) // specialhar-e.png
+ * ```
+*/
+export function getSafeS3Uri (uri) {
+  return uri
+    .replace(/\s+/gm, '-')
+    .replace(/([^\w-!./])/gm, '')
+}

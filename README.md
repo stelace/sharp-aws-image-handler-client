@@ -123,3 +123,19 @@ const url = cdn.getUrl('filename.jpg', {
 import { testWebP } from 'sharp-aws-image-handler-client'
 const supportsWebP = await testWebP()
 ```
+  #### getSafeS3URI
+  Make uri/filename safe for S3
+https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+
+**Kind**: global function  
+
+| Param | Type |
+| --- | --- |
+| uri | <code>String</code> | 
+
+**Example**  
+```js
+import { getSafeS3Uri } from 'sharp-aws-image-handler-client'
+const unsafeUri = 'special~©harŝ éeè.png'
+const safe = getSafeS3Uri(unsafeUri) // specialhar-e.png
+```
