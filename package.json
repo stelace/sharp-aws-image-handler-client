@@ -1,6 +1,6 @@
 {
   "name": "sharp-aws-image-handler-client",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Build CDN image URL with sharp edits applied by AWS serverless image handler (v4)",
   "main": "index.js",
   "scripts": {
