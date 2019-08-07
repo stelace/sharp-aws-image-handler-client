@@ -23,6 +23,7 @@ const cdn = new Cdn({
         * [.base](#module_sharp-aws-image-handler-client.Cdn+base) : <code>String</code>
         * [.bucket](#module_sharp-aws-image-handler-client.Cdn+bucket) : <code>String</code>
         * [.s3BucketUrl](#module_sharp-aws-image-handler-client.Cdn+s3BucketUrl) : <code>String</code>
+        * [.warnings](#module_sharp-aws-image-handler-client.Cdn+warnings) : <code>Boolean</code>
         * [.servedFromCdnBucket(uri, [base], [bucketUrl])](#module_sharp-aws-image-handler-client.Cdn+servedFromCdnBucket) : <code>function</code>
     * [.getUrl(uri, [edits], [options])](#module_sharp-aws-image-handler-client.getUrl) ⇒ <code>String</code>
 
@@ -36,6 +37,7 @@ const cdn = new Cdn({
     * [.base](#module_sharp-aws-image-handler-client.Cdn+base) : <code>String</code>
     * [.bucket](#module_sharp-aws-image-handler-client.Cdn+bucket) : <code>String</code>
     * [.s3BucketUrl](#module_sharp-aws-image-handler-client.Cdn+s3BucketUrl) : <code>String</code>
+    * [.warnings](#module_sharp-aws-image-handler-client.Cdn+warnings) : <code>Boolean</code>
     * [.servedFromCdnBucket(uri, [base], [bucketUrl])](#module_sharp-aws-image-handler-client.Cdn+servedFromCdnBucket) : <code>function</code>
 
 <a name="new_module_sharp-aws-image-handler-client.Cdn_new"></a>
@@ -62,6 +64,13 @@ S3 bucket URL
 
 **Kind**: instance property of [<code>Cdn</code>](#module_sharp-aws-image-handler-client.Cdn)  
 **Read only**: true  
+<a name="module_sharp-aws-image-handler-client.Cdn+warnings"></a>
+
+#### cdn.warnings : <code>Boolean</code>
+Using `console.warn` for potential errors like non-ascii or special chars in S3 file key
+
+**Kind**: instance property of [<code>Cdn</code>](#module_sharp-aws-image-handler-client.Cdn)  
+**Default**: <code>true</code>  
 <a name="module_sharp-aws-image-handler-client.Cdn+servedFromCdnBucket"></a>
 
 #### cdn.servedFromCdnBucket(uri, [base], [bucketUrl]) : <code>function</code>
@@ -84,7 +93,7 @@ Can return:
 <a name="module_sharp-aws-image-handler-client.getUrl"></a>
 
 ### cdn.getUrl(uri, [edits], [options]) ⇒ <code>String</code>
-Turn CDN file URI into image URL with edit operations.
+Turns CDN file URI into image URL with edit operations.
 If `uri` is a full URL and the file is not served from CDN, `uri` is return unchanged.
 
 **Kind**: static method of [<code>sharp-aws-image-handler-client</code>](#module_sharp-aws-image-handler-client)  
@@ -123,19 +132,20 @@ const url = cdn.getUrl('filename.jpg', {
 import { testWebP } from 'sharp-aws-image-handler-client'
 const supportsWebP = await testWebP()
 ```
-  #### getSafeS3URI
-  Make uri/filename safe for S3
+  #### getSafeS3String
+  Make uri/filename safe for S3.
 https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
 
 **Kind**: global function  
+**Returns**: <code>String</code> - Safe string  
 
 | Param | Type |
 | --- | --- |
-| uri | <code>String</code> | 
+| string | <code>String</code> | 
 
 **Example**  
 ```js
-import { getSafeS3Uri } from 'sharp-aws-image-handler-client'
-const unsafeUri = 'special~©harŝ éeè.png'
-const safe = getSafeS3Uri(unsafeUri) // specialhar-e.png
+import { getSafeS3String } from 'sharp-aws-image-handler-client'
+const unsafe = 'special~©harŝ éeè.png'
+const safe = getSafeS3String(unsafe) // specialhar-e.png
 ```

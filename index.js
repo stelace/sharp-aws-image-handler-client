@@ -18,7 +18,7 @@ export class Cdn {
   /**
    * Instantiates class with CDN parameters
    */
-  constructor ({ base, bucket, servedFromCdnBucket } = {}) {
+  constructor ({ base, bucket, servedFromCdnBucket, warnings = true } = {}) {
     /**
      * Base URL of CDN handling images, such as `https://cdn.stelace.com`
      * @type {String}
@@ -37,6 +37,13 @@ export class Cdn {
      * @readonly
      */
     this.s3BucketUrl = `https://${this.bucket}.s3.amazonaws.com`
+
+    /**
+     * Using `console.warn` for potential errors like non-ascii or special chars in S3 file key
+     * @type {Boolean}
+     * @default true
+     */
+    this.warnings = warnings
 
     /**
      * Lets you check that a file URI is served from CDN before trying to apply image edits in `getUrl` method.
@@ -61,7 +68,7 @@ export class Cdn {
   }
 
   /**
-   * Turn CDN file URI into image URL with edit operations.
+   * Turns CDN file URI into image URL with edit operations.
    * If `uri` is a full URL and the file is not served from CDN, `uri` is return unchanged.
    * @param {String} uri - File `uri` can be an URL including host and protocol.
    * @param {Object} [edits] - only used if image is served from CDN with image handler.
@@ -103,20 +110,31 @@ export class Cdn {
 
     try {
       if (!cdnBucket) return uri
+      // URL class automatically encodes path, which we don’t want in this object
+      // so we can match key in AWS image handler
+      const key = decodeURIComponent(path.replace(/^\//, ''))
       const imageRequest = JSON.stringify({
         bucket: options.bucket || (typeof cdnBucket === 'string' ? cdnBucket : this.bucket),
-        // URL class automatically encodes path, which we don’t want in this object
-        // So we can match key in AWS image handler
-        key: decodeURIComponent(path.replace(/^\//, '')),
+        key,
         edits
       })
+
+      // AWS serverless image handler only supports ascii chars in key
+      // https://github.com/awslabs/serverless-image-handler/blob/9ccdb7180c7881eb78c220f3958b671d968c16dd/source/image-handler/image-request.js#L199
+      if (this.warnings && key !== getSafeS3String(key)) {
+        console.warn(`Special chars in “${key}” are not safe to use with AWS Lambda image handler.`)
+      }
 
       return `${
         this.base.replace(/\/$/, '') || ''
       }/${
-        // By default window.btoa uses UTF-16, not UTF-8
-        // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Unicode_strings
-        btoa(unescape(encodeURIComponent(imageRequest)))
+        /*
+         * By default window.btoa uses UTF-16, not UTF-8, but we can’t methods such as
+         * `btoa(unescape(encodeURIComponent(imageRequest)))`
+         * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa#Unicode_strings
+         * since AWS image handler does not support ascii chars and we’d rather not maintain a fork
+         */
+        btoa(imageRequest)
       }`
     } catch (e) {
       return uri
@@ -148,22 +166,22 @@ export async function testWebP () {
 }
 
 /**
- * Make uri/filename safe for S3
+ * Make uri/filename safe for S3.
  * https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
  * @type {Function}
- * @param {String} uri
- * @returns {String}
- * @alias getSafeS3URI
+ * @param {String} string
+ * @returns {String} Safe string
+ * @alias getSafeS3String
  *
  * @example
  * ```js
- * import { getSafeS3Uri } from 'sharp-aws-image-handler-client'
- * const unsafeUri = 'special~©harŝ éeè.png'
- * const safe = getSafeS3Uri(unsafeUri) // specialhar-e.png
+ * import { getSafeS3String } from 'sharp-aws-image-handler-client'
+ * const unsafe = 'special~©harŝ éeè.png'
+ * const safe = getSafeS3String(unsafe) // specialhar-e.png
  * ```
 */
-export function getSafeS3Uri (uri) {
-  return uri
+export function getSafeS3String (str) {
+  return str
     .replace(/\s+/gm, '-')
     .replace(/([^\w-!./])/gm, '')
 }
