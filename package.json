@@ -37,7 +37,7 @@
     "eslint-plugin-standard": "^4.0.1",
     "husky": ">=4",
     "jsdoc-to-markdown": "^5.0.3",
-    "lint-staged": ">=8"
+    "lint-staged": ">=9"
   },
   "engines": {
     "node": ">= 8.12.0",
